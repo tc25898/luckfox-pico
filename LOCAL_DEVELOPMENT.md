@@ -1,7 +1,7 @@
 # Local development baseline
 
 The local `main` branch includes the verified host compatibility work and a
-bounded CMake modernization for the selected RV1106 development target.
+CMake modernization for all active components of the selected RV1106 target.
 These local changes are not submitted as new pull requests.
 
 ## Published commits
@@ -16,40 +16,74 @@ identities preserved. Their PR branches have not been amended or rebased:
 
 ## Local CMake modernization
 
-- The common algorithm component and selected RV1106 camera project use
-  `cmake_minimum_required(VERSION 3.16...4.2)`. The syntax records CMake
-  3.16 as the minimum and selects policies through 4.2.
-- The common algorithm root has an explicit `project()` declaration.
-- RV1106 camera include paths, link paths, and the ISP definition are scoped
-  to the executable target; its link libraries are explicitly private.
-- Camera optimization/debug flags use `add_compile_options()` rather than
-  `add_definitions()`, and build-type comparisons handle an empty value.
+All seven CMake components exercised by the selected RV1106 Pico Pi build
+now declare `cmake_minimum_required(VERSION 3.16...4.2)`. The syntax requires
+CMake 3.16 and selects policies through 4.2. `project/build.sh` no longer
+supplies a global policy-minimum workaround. An explicitly exported
+`CMAKE_POLICY_VERSION_MINIMUM` is still inherited normally.
 
-On October 22, 2026, both components were configured, built, and installed
-from empty build directories using CMake 4.2.3 and the SDK's ARM GCC 8.3.0
-toolchain, with `CMAKE_POLICY_VERSION_MINIMUM` absent from the environment
-and cache. The selected RV1106 Release options matched the existing SDK.
+- The common algorithm root has an explicit `project()` declaration.
+- RV1106 camera and ISP demo include paths, link paths, and definitions
+  are scoped to their executable targets, with private link libraries.
+- IVE scopes its sample includes and links to the target and installs it
+  using `install(TARGETS ...)`.
+- Rockit compiler flags and definitions use their respective CMake commands.
+- Camera build-type comparisons handle an empty value. ISP uses a string
+  comparison for its operating system and removes a redundant policy setting.
+
+On October 22, 2026, all seven components were configured, built, and
+installed from empty build directories using CMake 4.2.3 and the SDK's ARM
+GCC 8.3 toolchain. Modernized builds had no policy override in the environment
+or cache. Options matched the existing RV1106 configuration: Release,
+except for the ISP demo's MinSizeRel configuration.
 
 Compared with fresh baseline builds using the previous CMake files:
 
-| Component | Installed files | Content comparison |
-| --- | --- | --- |
-| common_algorithm | 42 | All files identical |
-| RV1106 rkipc | 13 | All files identical, including the ARM executable |
+| Component | Outputs checked | Result |
+| --- | ---: | --- |
+| common_algorithm | 42 installed files | Identical contents and permissions |
+| IVA | 11 installed files | Identical contents and permissions |
+| IVE | 10 installed files | Identical contents and permissions |
+| Rockit MPI | 67 installed files | Identical contents and permissions |
+| rkfsmk | 2 installed files | Identical contents and permissions |
+| RV1106 rkipc | 13 installed files | Identical contents and permissions |
+| RV1106 ISP demo | 1 executable | 44 identical object files; identical shared-library dependencies |
 
-The camera shared-library dependency list was also identical. CMake's
-legacy-policy and missing-project warnings are resolved for these paths.
-The SDK supplies two unused find-root-path options to the camera project;
-those still produce an informational configuration warning.
+The ISP executable's runtime search path differs: it embeds the temporary
+build directory and no longer includes an accidental source-directory entry
+caused by empty arguments to directory-level `link_directories()`. After
+accounting for these path differences, its link commands match.
 
-Only the selected RV1106 Release configuration was built. Alternate boards,
-optional algorithm examples, other build types, and older CMake versions
-were not tested. Other vendor projects retain their existing CMake files
-and may still need the compatibility default in `project/build.sh`.
+Temporary comparison builds, logs, options, harness, and previous SDK CMake
+build directories are under `/tmp/luckfox-cmake-expansion/` and may disappear
+on reboot. The comparison summary is also documented in the neighboring
+backyard-defense repository's `docs/luckfox-cmake-modernization.md`.
 
-The firmware images in `output/image` remain the previously verified
-build; these local CMake changes were tested in isolated directories and
-have not been repackaged or boot-tested on hardware.
+These checks cover the selected RV1106 build. Other boards, optional TGI and
+algorithm examples, RGA samples, bundled third-party sources, MCU builds,
+other build types, and older CMake versions remain unverified. Their CMake
+files were left unchanged during this expansion.
+Some separately built legacy projects may need an explicit policy override.
+Device boot and hardware operation require separate testing.
+
+## Full SDK integration result
+
+The subsequent full `./build.sh` command exited with status 0 and completed
+`build_all`, `build_firmware`, `build_updateimg`, `build_save`, and
+`build_allsave`. The selected CMake build directories and cached package
+outputs were moved aside to force fresh configuration and compilation.
+ISP's prebuilt libraries were retained and its demo build directory was
+refreshed. Other SDK stages used their normal incremental state.
+
+All seven resulting CMake caches contain no policy-minimum override. The
+log contains no CMake errors or deprecation warnings; existing warnings
+about unused generic options supplied by SDK wrappers remain.
+
+- Log: `~/luckfox-cmake-modernization-build.log`
+- Firmware: `output/image/update.img` (478,310,986 bytes)
+- Release: `IMAGE/IPC_EMMC_BUILDROOT_RV1106_LUCKFOX_PICO_PI_20261022.1633_RELEASE_TEST/`
+
+No hardware was flashed or tested.
 
 ## Preserved Buildroot fixes
 

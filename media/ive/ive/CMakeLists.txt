@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.1)
+cmake_minimum_required(VERSION 3.16...4.2)
 set(CMAKE_CXX_FLAGS                "${CMAKE_CXX_FLAGS} -Wall -std=c++11 -fPIC")
 set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g -gdwarf")
 set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG")
@@ -31,15 +31,11 @@ set(SAMPLE_SRCS
 
 find_library(LIBRVE_LIBRARY rve ${ROCKIVE_DIR}/${TARGET_LIB_ARCH})
 
-include_directories(
-	sample
-	include
-)
-
 find_library(LIBROCKIT_LIBRARY
     rockit
 )
 
 add_executable(${SAMPLE_BIN_NAME} ${SAMPLE_SRCS})
-target_link_libraries(${SAMPLE_BIN_NAME} rockit ${LIBRVE_LIBRARY})
-install(PROGRAMS ${PROJECT_BINARY_DIR}/${SAMPLE_BIN_NAME} DESTINATION bin)
+target_include_directories(${SAMPLE_BIN_NAME} PRIVATE sample include)
+target_link_libraries(${SAMPLE_BIN_NAME} PRIVATE rockit ${LIBRVE_LIBRARY})
+install(TARGETS ${SAMPLE_BIN_NAME} RUNTIME DESTINATION bin)

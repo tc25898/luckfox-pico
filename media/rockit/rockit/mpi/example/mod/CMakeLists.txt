@@ -1,8 +1,9 @@
-cmake_minimum_required( VERSION 2.8.8 )
-add_definitions(-fno-rtti)
+cmake_minimum_required(VERSION 3.16...4.2)
+add_compile_options(-fno-rtti)
 
 add_compile_options(-std=c++11)
-add_definitions(-std=c++11 -Wno-attributes -Wno-deprecated-declarations -DANDROID_STL=c++_shared)
+add_compile_options(-Wno-attributes -Wno-deprecated-declarations)
+add_compile_definitions(ANDROID_STL=c++_shared)
 
 set(RK_MPI_TEST_AO_SRC
     test_mpi_ao.cpp
@@ -113,7 +114,7 @@ install(TARGETS rk_mpi_vpss_test RUNTIME DESTINATION "bin")
 #--------------------------
 # rk_mpi_avs_test
 #--------------------------
-add_definitions(-DHAVE_AVS)
+add_compile_definitions(HAVE_AVS)
 add_executable(rk_mpi_avs_test ${RK_MPI_TEST_AVS_SRC} ${RK_MPI_TEST_COMMON_SRC})
 target_link_libraries(rk_mpi_avs_test ${ROCKIT_DEP_COMMON_LIBS_FULL})
 install(TARGETS rk_mpi_avs_test RUNTIME DESTINATION "bin")
@@ -213,7 +214,7 @@ install(TARGETS rk_mpi_avio_test RUNTIME DESTINATION "bin")
 #--------------------------
 # rk_mpi_af_test
 #--------------------------
-add_definitions(-DHAVE_AF)
+add_compile_definitions(HAVE_AF)
 add_executable(rk_mpi_af_test ${RK_MPI_TEST_AF_SRC} ${RK_MPI_TEST_COMMON_SRC})
 target_link_libraries(rk_mpi_af_test ${ROCKIT_DEP_COMMON_LIBS})
 install(TARGETS rk_mpi_af_test RUNTIME DESTINATION "bin")

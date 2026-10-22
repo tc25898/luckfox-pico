@@ -1,8 +1,9 @@
-cmake_minimum_required( VERSION 2.8.8 )
-add_definitions(-fno-rtti)
+cmake_minimum_required(VERSION 3.16...4.2)
+add_compile_options(-fno-rtti)
 
 add_compile_options(-std=c++11)
-add_definitions(-std=c++11 -Wno-attributes -Wno-deprecated-declarations -DANDROID_STL=c++_shared)
+add_compile_options(-Wno-attributes -Wno-deprecated-declarations)
+add_compile_definitions(ANDROID_STL=c++_shared)
 
 include_directories(include)
 
