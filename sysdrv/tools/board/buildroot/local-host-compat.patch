@@ -1,0 +1,163 @@
+--- a/package/m4/m4.mk
++++ b/package/m4/m4.mk
+@@ -10,4 +10,7 @@
+ M4_LICENSE = GPL-3.0+
+ M4_LICENSE_FILES = COPYING
+ 
++# GCC 15 defaults to C23, which the gnulib in m4 1.4.19 cannot build with.
++HOST_M4_CONF_ENV = CFLAGS="$(HOST_CFLAGS) -std=gnu17"
++
+ $(eval $(host-autotools-package))
+--- a/package/gettext-gnu/gettext-gnu.mk
++++ b/package/gettext-gnu/gettext-gnu.mk
+@@ -99,5 +99,8 @@
+ 
+ HOST_GETTEXT_GNU_POST_INSTALL_HOOKS += HOST_GETTEXT_GNU_ADD_ABOUT_NLS
+ 
++# Keep gettext 0.20.1 compatible with the GCC 15 default language change.
++HOST_GETTEXT_GNU_CONF_ENV += CFLAGS="$(HOST_CFLAGS) -std=gnu17"
++
+ $(eval $(autotools-package))
+ $(eval $(host-autotools-package))
+--- a/package/bash/bash.mk
++++ b/package/bash/bash.mk
+@@ -68,4 +68,7 @@
+ endef
+ BASH_TARGET_FINALIZE_HOOKS += BASH_ADD_BASH_TO_SHELLS
+ 
++# Bash build helpers use pre-C23 function declarations.
++BASH_CONF_ENV += CFLAGS_FOR_BUILD="$(HOST_CFLAGS) -std=gnu17"
++
+ $(eval $(autotools-package))
+--- a/package/dbus-glib/dbus-glib.mk
++++ b/package/dbus-glib/dbus-glib.mk
+@@ -36,6 +36,9 @@
+ 	--disable-doxygen-docs \
+ 	--enable-asserts=yes
+ 
++# This release uses identifiers that became keywords in C23.
++HOST_DBUS_GLIB_CONF_ENV += CFLAGS="$(HOST_CFLAGS) -std=gnu17"
++
+ $(eval $(autotools-package))
+ $(eval $(host-autotools-package))
+ 
+--- a/package/e2fsprogs/e2fsprogs.mk
++++ b/package/e2fsprogs/e2fsprogs.mk
+@@ -99,5 +99,13 @@
+ endef
+ HOST_E2FSPROGS_POST_INSTALL_HOOKS += HOST_E2FSPROGS_REMOVE_COMPILE_ET
+ 
++# Older configure only recognizes GNU mkdir and selects a broken fallback
++# for uutils mkdir. Both implementations support mkdir -p.
++E2FSPROGS_CONF_ENV += MKDIR_P="mkdir -p"
++HOST_E2FSPROGS_CONF_ENV += MKDIR_P="mkdir -p"
++
++# The bundled tdb code defines bool, which is a keyword in C23.
++HOST_E2FSPROGS_CONF_ENV += CFLAGS="$(HOST_CFLAGS) -std=gnu17"
++
+ $(eval $(autotools-package))
+ $(eval $(host-autotools-package))
+--- a/package/unzip/unzip.mk
++++ b/package/unzip/unzip.mk
+@@ -42,4 +42,7 @@
+ 	-DCMAKE_C_FLAGS="$(UNZIP_TARGET_CFLAGS) -DLARGE_FILE_SUPPORT" \
+ 	-DCMAKE_CXX_FLAGS="$(UNZIP_TARGET_CXXFLAGS) -DLARGE_FILE_SUPPORT"
+ 
++# CMake 4 removed compatibility with policy versions older than 3.5.
++UNZIP_CONF_OPTS += -DCMAKE_POLICY_VERSION_MINIMUM=3.5
++
+ $(eval $(cmake-package))
+--- a/package/cjson/cjson.mk
++++ b/package/cjson/cjson.mk
+@@ -31,4 +31,7 @@
+ CJSON_CONF_OPTS += -DENABLE_CJSON_UTILS=OFF
+ endif
+ 
++# CMake 4 removed compatibility with policy versions older than 3.5.
++CJSON_CONF_OPTS += -DCMAKE_POLICY_VERSION_MINIMUM=3.5
++
+ $(eval $(cmake-package))
+--- a/package/dtc/dtc.mk
++++ b/package/dtc/dtc.mk
+@@ -66,9 +66,9 @@
+ 	$(TARGET_CONFIGURE_OPTS) $(MAKE) -C $(@D) DESTDIR=$(TARGET_DIR) $(DTC_MAKE_OPTS) $(DTC_INSTALL_GOAL)
+ endef
+ 
+-# host build
++# Host DTC predates C23 string-function const qualification.
+ define HOST_DTC_BUILD_CMDS
+-	$(HOST_CONFIGURE_OPTS) $(MAKE) EXTRA_CFLAGS="$(HOST_CFLAGS) -fPIC" -C $(@D) $(HOST_DTC_MAKE_OPTS)
++	$(HOST_CONFIGURE_OPTS) $(MAKE) EXTRA_CFLAGS="$(HOST_CFLAGS) -fPIC -std=gnu17" -C $(@D) $(HOST_DTC_MAKE_OPTS)
+ endef
+ 
+ define HOST_DTC_INSTALL_CMDS
+--- a/package/heimdal/heimdal.mk
++++ b/package/heimdal/heimdal.mk
+@@ -43,4 +43,8 @@
+ HOST_HEIMDAL_POST_INSTALL_HOOKS += \
+ 	HOST_HEIMDAL_INSTALL_COMPILE_ET
+ 
++# Legacy configure link probes call functions without declarations.
++# New GCC rejects these probes and incorrectly omits required libraries.
++HOST_HEIMDAL_CONF_ENV += CFLAGS="$(HOST_CFLAGS) -std=gnu17 -Wno-error=implicit-function-declaration"
++
+ $(eval $(host-autotools-package))
+--- a/package/libtirpc/libtirpc.mk
++++ b/package/libtirpc/libtirpc.mk
+@@ -25,5 +25,8 @@
+ endif
+ HOST_LIBTIRPC_CONF_OPTS = --disable-gssapi
+ 
++# This release uses function declarations with pre-C23 semantics.
++HOST_LIBTIRPC_CONF_ENV += CFLAGS="$(HOST_CFLAGS) -std=gnu17"
++
+ $(eval $(autotools-package))
+ $(eval $(host-autotools-package))
+--- a/package/perl/perl.mk
++++ b/package/perl/perl.mk
+@@ -113,6 +113,9 @@
+ 	$(HOST_MAKE_ENV) $(MAKE) -C $(@D) INSTALL_DEPENDENCE='' install
+ endef
+ 
++# Configure probes run before Perl selects C99; avoid C23 probe failures.
++HOST_PERL_CONF_OPTS += -Dccflags="$(HOST_CFLAGS) -std=gnu17"
++
+ $(eval $(generic-package))
+ $(eval $(host-generic-package))
+ 
+--- /dev/null
++++ b/package/libffi/0004-Forward-declare-open_temp_exec_file.patch
+@@ -0,0 +1,33 @@
++From ce077e5565366171aa1b4438749b0922fce887a4 Mon Sep 17 00:00:00 2001
++Subject: [PATCH] Forward declare open_temp_exec_file
++
++Upstream-Status: Backport [https://github.com/libffi/libffi/commit/ce077e5565366171aa1b4438749b0922fce887a4]
++
++diff --git a/include/ffi_common.h b/include/ffi_common.h
++--- a/include/ffi_common.h
+++++ b/include/ffi_common.h
++@@ -128,6 +128,10 @@ void *ffi_data_to_code_pointer (void *data) FFI_HIDDEN;
++    static trampoline. */
++ int ffi_tramp_is_present (void *closure) FFI_HIDDEN;
++ 
+++/* Return a file descriptor of a temporary zero-sized file in a
+++   writable and executable filesystem. */
+++int open_temp_exec_file(void) FFI_HIDDEN;
+++
++ /* Extended cif, used in callback from assembly routine */
++ typedef struct
++ {
++diff --git a/src/tramp.c b/src/tramp.c
++--- a/src/tramp.c
+++++ b/src/tramp.c
++@@ -39,6 +39,10 @@
++ #ifdef __linux__
++ #define _GNU_SOURCE 1
++ #endif
+++
+++#include <ffi.h>
+++#include <ffi_common.h>
+++
++ #include <stdio.h>
++ #include <unistd.h>
++ #include <stdlib.h>

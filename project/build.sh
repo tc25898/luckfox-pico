@@ -2,6 +2,8 @@
 set -eE
 
 export LC_ALL=C
+# Selected RV1106 projects declare their supported CMake policies directly.
+# An explicitly exported CMAKE_POLICY_VERSION_MINIMUM is still inherited.
 export LD_LIBRARY_PATH=
 RECORD_IFS="$IFS"
 

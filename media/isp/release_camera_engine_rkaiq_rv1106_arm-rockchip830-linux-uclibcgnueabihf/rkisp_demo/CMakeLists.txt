@@ -1,16 +1,12 @@
+cmake_minimum_required(VERSION 3.16...4.2)
+
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING
         "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel."
         FORCE)
 endif()
 
-cmake_minimum_required(VERSION 2.8...3.22)
-
-PROJECT(rkisp_demo)
-
-if(POLICY CMP0015)
-    cmake_policy(SET CMP0015 NEW)
-endif()
+project(rkisp_demo)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -54,7 +50,7 @@ option(ENABLE_IIO_API "Enable IIO API for EIS algorithm" OFF)
 set(RK_AIQ_SOURCE_DIR ${PROJECT_SOURCE_DIR}/../rk_aiq)
 message("rkaiq src path" ${RK_AIQ_SOURCE_DIR})
 
-if (${CMAKE_SYSTEM_NAME} EQUAL "")
+if(CMAKE_SYSTEM_NAME STREQUAL "")
     set(OS "linux")
 else()
     string(TOLOWER ${CMAKE_SYSTEM_NAME} OS)
@@ -108,7 +104,7 @@ if (ENABLE_ISPFEC_API)
 	add_compile_options(-DISPFEC_API)
 endif()
 
-include_directories(
+set(RKISP_DEMO_INCLUDE_DIRS
     deps/include
     demo
     demo/include
@@ -172,42 +168,43 @@ endif()
 message(${CMAKE_LIBRARY_PATH})
 message(${LIBRARY_OUTPUT_PATH})
 
-add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-
 if (libdrm_FOUND)
-    link_directories("${LIBRARY_OUTPUT_PATH}" "${RK_AIQ_LIB_DIR}" "${IIO_LIB_DIR}"
+    set(RKISP_DEMO_LINK_DIRS "${LIBRARY_OUTPUT_PATH}" "${RK_AIQ_LIB_DIR}" "${IIO_LIB_DIR}"
         "${PROJECT_SOURCE_DIR}/deps/lib" "${SMARTIR_INSTALLED_LIB_DIR}" "${ISPFEC_LIB_DIR}")
 else()
-    link_directories("${LIBRARY_OUTPUT_PATH}" "${RK_AIQ_LIB_DIR}" "${IIO_LIB_DIR}"
+    set(RKISP_DEMO_LINK_DIRS "${LIBRARY_OUTPUT_PATH}" "${RK_AIQ_LIB_DIR}" "${IIO_LIB_DIR}"
         "${SMARTIR_INSTALLED_LIB_DIR}" "${LOCAL_DRM_LIB_DIR}"  "${ISPFEC_LIB_DIR}")
 endif()
 add_executable(rkisp_demo ${DIR_SRCS})
+target_include_directories(rkisp_demo PRIVATE ${RKISP_DEMO_INCLUDE_DIRS})
+target_link_directories(rkisp_demo PRIVATE ${RKISP_DEMO_LINK_DIRS})
+target_compile_definitions(rkisp_demo PRIVATE _CRT_SECURE_NO_WARNINGS)
 if (libdrm_FOUND)
-    target_link_libraries(rkisp_demo rga drm ${RK_AIQ_LIB} ${IIO_LIBS}
+    target_link_libraries(rkisp_demo PRIVATE rga drm ${RK_AIQ_LIB} ${IIO_LIBS}
         ${SMARTIR_LIB} ${ISPFEC_LIB})
 else()
-    target_link_libraries(rkisp_demo ${RK_AIQ_LIB} ${IIO_LIBS} ${SMARTIR_LIB} ${LOCAL_DRM_LIB} ${ISPFEC_LIB})
+    target_link_libraries(rkisp_demo PRIVATE ${RK_AIQ_LIB} ${IIO_LIBS} ${SMARTIR_LIB} ${LOCAL_DRM_LIB} ${ISPFEC_LIB})
 endif()
 
 if (libdrm_FOUND)
-    target_link_libraries(rkisp_demo
+    target_link_libraries(rkisp_demo PRIVATE
         libdrm::libdrm
         )
 endif()
 
 if (librga_FOUND)
-    target_link_libraries(rkisp_demo
+    target_link_libraries(rkisp_demo PRIVATE
         librga::librga
         )
 endif()
 
-if (${CMAKE_SYSTEM_NAME} STREQUAL "Android")
-    target_link_libraries(rkisp_demo
+if(CMAKE_SYSTEM_NAME STREQUAL "Android")
+    target_link_libraries(rkisp_demo PRIVATE
         log
         utils
         cutils
         )
 else ()
-    target_link_libraries(rkisp_demo
+    target_link_libraries(rkisp_demo PRIVATE
         pthread)
 endif()

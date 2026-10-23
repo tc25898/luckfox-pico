@@ -1,6 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
-
-include_directories(${PROJECT_SOURCE_DIR}/./include
+set(RKIPC_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/./include
 					${CMAKE_SYSROOT}/usr/include/rkaiq/
 					${CMAKE_SYSROOT}/usr/include/rkaiq/uAPI
 					${CMAKE_SYSROOT}/usr/include/rkaiq/uAPI2
@@ -32,7 +30,7 @@ aux_source_directory(${PROJECT_SOURCE_DIR}/common/rockiva SRCS)
 aux_source_directory(${PROJECT_SOURCE_DIR}/common/event SRCS)
 aux_source_directory(${PROJECT_SOURCE_DIR}/common/region_clip SRCS)
 
-include_directories(video
+list(APPEND RKIPC_INCLUDE_DIRS video
 					server
 					${PROJECT_SOURCE_DIR}/common
 					${PROJECT_SOURCE_DIR}/common/audio/rv1106
@@ -52,9 +50,7 @@ include_directories(video
 					${PROJECT_SOURCE_DIR}/common/region_clip
 					)
 
-link_directories(${PROJECT_SOURCE_DIR}/lib/arm-rockchip830-linux-uclibcgnueabihf)
 
-add_definitions(-DISP_HW_V32)
 #add_definitions(-g -ggdb)
 # add_definitions(-Os)
 
@@ -63,7 +59,10 @@ add_definitions(-DISP_HW_V32)
 # link_libraries(asan)
 
 add_executable(${PROJECT_NAME} ${SRCS})
-target_link_libraries(${PROJECT_NAME} pthread rockit rockchip_mpp rkaiq rtsp rkaudio_detect aec_bf_process wpa_client m rkmuxer freetype rockiva iconv rknnmrt rga stdc++ rksysutils rkaudio)
+target_include_directories(${PROJECT_NAME} PRIVATE ${RKIPC_INCLUDE_DIRS})
+target_link_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/lib/arm-rockchip830-linux-uclibcgnueabihf")
+target_compile_definitions(${PROJECT_NAME} PRIVATE ISP_HW_V32)
+target_link_libraries(${PROJECT_NAME} PRIVATE pthread rockit rockchip_mpp rkaiq rtsp rkaudio_detect aec_bf_process wpa_client m rkmuxer freetype rockiva iconv rknnmrt rga stdc++ rksysutils rkaudio)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
 install(FILES rkipc-mia1321-100w.ini DESTINATION share)
