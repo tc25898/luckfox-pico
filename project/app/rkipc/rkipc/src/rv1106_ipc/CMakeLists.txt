@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.16...4.2)
-
 set(RKIPC_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/./include
 					${CMAKE_SYSROOT}/usr/include/rkaiq/
 					${CMAKE_SYSROOT}/usr/include/rkaiq/uAPI

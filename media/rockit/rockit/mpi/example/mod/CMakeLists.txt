@@ -1,4 +1,3 @@
-cmake_minimum_required(VERSION 3.16...4.2)
 add_compile_options(-fno-rtti)
 
 add_compile_options(-std=c++11)

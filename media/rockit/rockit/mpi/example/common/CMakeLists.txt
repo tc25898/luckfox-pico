@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.16...4.2)
-
 set(RK_TEST_MOD_SRC
     test_mod_vpss.cpp
 )

@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.16...4.2)
-
 set(ROCKIT_FILE_HEADERS ${CMAKE_CURRENT_LIST_DIR}/include)
 
 install(FILES ${ROCKIT_FILE_LIBS} DESTINATION "lib")
