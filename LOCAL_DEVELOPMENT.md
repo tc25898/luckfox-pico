@@ -2,7 +2,9 @@
 
 The local `main` branch includes the verified host compatibility work and a
 CMake modernization for all active components of the selected RV1106 target.
-These local changes are not submitted as new pull requests.
+This baseline is being proposed into the contributor's public fork,
+`tc25898/luckfox-pico`, for project review. It is separate from the
+LuckfoxTECH upstream contributions listed below.
 
 ## Published commits
 
@@ -111,3 +113,11 @@ The existing rebuilt hostapd, hostapd_cli, and librkwifibt.so outputs are
 recorded in a separate local commit from the source changes. Firmware images
 and large generated SDK directories remain ignored. No remote branch was
 pushed as part of this local consolidation.
+
+## Review workflow
+
+This first baseline PR intentionally collects the initial build fixes,
+CMake modernization, generated Wi-Fi outputs, and validation notes together.
+Future changes use task branches and focused PRs against this fork's `main`.
+Contributions to LuckfoxTECH remain separate decisions. The application
+source and project tracking live in the private `backyard-defense` repository.
