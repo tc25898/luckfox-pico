@@ -12,7 +12,8 @@ identities preserved. Their PR branches have not been amended or rebased:
 - `85e339a1e33c0cc29d18525afc7e659028b33d7a`: board e2fsprogs compatibility,
   published in Luckfox PR #379.
 - `e040f1e0609bd69f979d260009c5d7f07ce27f89`: vendor CMake compatibility,
-  published in Luckfox PR #380.
+  published in Luckfox PR #380, withdrawn (closed without merging) on
+  October 22, 2026 in favor of direct CMake modernization. PR #379 remains open.
 
 ## Local CMake modernization
 
