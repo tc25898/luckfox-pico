@@ -403,3 +403,26 @@ startup speedup or controlled low-light/dynamic-image qualification.
 No new tests/harness/CI, full firmware/image rebuild, flash or permanent board
 IQ replacement was performed. Installed files/config/IQ hashes and original
 disarmed/vision-off services were restored; temporary target data removed.
+
+## MIS5001 BAY3D memory/bandwidth-saving mode
+
+The MIS5001 normal linear-mode IQ sets `bayertnr_v23.TuningPara.trans_en=1`.
+The ISP driver sizes the BAY3D temporal-noise-reduction IIR working buffer
+smaller in bandwidth-saving mode. Rockchip recommends this setting for linear
+mode and recommends disabling it for HDR. Its exact internal encoding and
+whether it is lossless are not established by the inspected documentation.
+
+On Pico Pi A W with MIS5001, four 28-second non-actuating, watch-only YOLO/live
+sessions (one off/on pair in bright light and one in mild dim light) reported
+`bwsaving:0/1`, ~25 fps and no sampled frame loss or ISP errors. Sampled CMA
+peak was 60,476/58,008 KiB off/on in both pairs; the ISP allocation decreased
+by the same 2,468 KiB. Cup detections were 100/101 and 108/109 in bright
+light and 100/101 and 106/107 in mild dim light. These measurements are scoped
+to that fixed scene and workload; no DDR throughput counter was measured.
+
+The SDK `j2s4b` converter produced a deterministic 181,376-byte BIN and
+reported a matching input structure. A separate 12-second Pico camera-only run
+loaded that BIN (`IQBIN v1.0.0`), reported `bwsaving:1`, ~25 fps and no sampled
+frame loss or ISP errors. Deep low light, motion, other objects and HDR remain
+unqualified; the running device's installed IQ was not replaced. The owner
+accepted the available evidence for this focused change.
