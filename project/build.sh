@@ -1421,6 +1421,16 @@ function __PACKAGE_RESOURCES() {
 		for item in $(echo $RK_CAMERA_SENSOR_IQFILES); do
 			if [ -f "$RK_PROJECT_PATH_MEDIA/isp_iqfiles/$item" ]; then
 				cp -rfa $RK_PROJECT_PATH_MEDIA/isp_iqfiles/$item $_iqfiles_dir
+			elif [[ "$item" == *.bin && -f "$RK_PROJECT_PATH_MEDIA/isp_iqfiles/${item%.bin}.json" ]]; then
+				"$RK_PROJECT_PATH_MEDIA/host/j2s4b" \
+					"$RK_PROJECT_PATH_MEDIA/isp_iqfiles/${item%.bin}.json" \
+					"$_iqfiles_dir/$item" || exit 1
+			elif [[ "$item" == *.bin ]]; then
+				msg_error "Missing selected IQ file: $item"
+				exit 1
+			fi
+			if [[ "$item" == *.bin ]]; then
+				rm -f "$_iqfiles_dir/${item%.bin}.json"
 			fi
 		done
 		IFS=

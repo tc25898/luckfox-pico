@@ -363,3 +363,43 @@ Open the menuconfig interface for buildroot.
 ## Notices
 When copying the source code package under Windows, the executable file under Linux may become a non-executable file, or the soft link fails and cannot be compiled and used.
 Therefore, please be careful not to copy the source code package under Windows.
+
+## Pico Pi MIS5001 binary IQ packaging
+
+The EMMC Buildroot Pico Pi profile selects the MIS5001 `.bin` IQ file. Resource
+packaging copies a supplied BIN or, when only its matching JSON exists, invokes
+this SDK's existing `media_out/host/j2s4b` to create it. Missing BIN/input or failed
+conversion stops packaging. A same-name JSON left in a reused staging directory
+is removed after successful BIN packaging so RKAIQ actually uses BIN. The source
+JSON stays in the SDK for tuning; SC4336/SC3336 selections remain JSON. No runtime
+switch, application change, new converter dependency or tuning change is added.
+
+Validated on SDK base `a5ae31e4c` (2026-11-06 UTC): `bash -n`; the actual resource
+packager run twice against existing SDK outputs in isolated OEM staging, including
+a seeded stale MIS5001 JSON. Both runs produce identical checksums, preserve the
+other selected IQ files and remove stale MIS5001 JSON. Converter reports
+`bin struct match input json: Yes`.
+
+MIS5001 input 451183 bytes -> BIN 181376 bytes (269807 fewer file bytes; not a
+partition-size/CMA claim). Source SHA-256:
+`b3358aa03c99205f53bf9bca7c65ab0d4a1669a9ece5343ed1fc37a7a1651302`.
+BIN SHA-256:
+`e17a382c5b941fc245712dd38c6f78ded5b8dad78e45e2ab4bca90c0c219aac9`.
+Host converter SHA-256:
+`f3cb55c2e3c6b54986a6bd237ecfd3906f23c5680a8bc06328dfa5a8fca035da`.
+
+A 12-second temporary, non-actuating Pico camera run using the complete packaged
+IQ directory explicitly logs `AIQ run with iq bin` / `IQBIN Version: v1.0.0`.
+Online input remains ~25fps, sampled frame loss/ISP error zero, CMA33456KiB,
+process RSS high-water8724KiB, and teardown CMA12KiB. Runtime used the existing
+Controller artifact `8c83706e8bb47edade34d1a136d2234f6b9c6cf5a452e5cc934b587495feaa71`;
+this is IQ-loader validation, not adoption of unrelated application changes.
+The BIN is byte-identical to earlier three-run static image/AE/AWB/model checks
+in [Backyard Defense PR91](https://github.com/tc25898/backyard-defense/pull/91).
+Those historical comparisons found about2124KiB camera-only median RSS difference
+and152KiB full-load difference, no CMA gain. Do not promise a 2MiB all-mode gain,
+startup speedup or controlled low-light/dynamic-image qualification.
+
+No new tests/harness/CI, full firmware/image rebuild, flash or permanent board
+IQ replacement was performed. Installed files/config/IQ hashes and original
+disarmed/vision-off services were restored; temporary target data removed.
