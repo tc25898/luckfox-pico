@@ -177,7 +177,7 @@
 								},
 								"AecAntiFlicker":	{
 									"enable":	1,
-									"Frequency":	"AECV2_FLICKER_FREQUENCY_50HZ",
+									"Frequency":	"AECV2_FLICKER_FREQUENCY_60HZ",
 									"Mode":	"AECV2_ANTIFLICKER_AUTO_MODE"
 								},
 								"AecEnvLvCalib":	{
