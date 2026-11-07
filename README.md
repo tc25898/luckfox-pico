@@ -426,3 +426,15 @@ loaded that BIN (`IQBIN v1.0.0`), reported `bwsaving:1`, ~25 fps and no sampled
 frame loss or ISP errors. Deep low light, motion, other objects and HDR remain
 unqualified; the running device's installed IQ was not replaced. The owner
 accepted the available evidence for this focused change.
+
+## Pico USB serial bridge identity
+
+CP210x and CH341 are built in. On the verified Pico image, udev already creates
+device-specific `/dev/serial/by-id/` links for USB serial adapters. For the
+Waveshare ESP bridge, choose its actual link on the target in the local
+`BACKYARD_UART_DEVICE` Controller service configuration; do not commit an
+individual adapter's serial number or rely on `/dev/ttyUSB0` enumeration order.
+Controller must support serial symlinks (see the companion Backyard Defense
+change). Missing devices and failed probes remain faults, and a Controller
+restart is required after a fault. No extra udev rule or background service is
+needed on the verified image.
