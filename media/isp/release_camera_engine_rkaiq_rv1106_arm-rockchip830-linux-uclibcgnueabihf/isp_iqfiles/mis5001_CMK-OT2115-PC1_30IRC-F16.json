@@ -237,7 +237,7 @@
 									"DySetpoint_len":	6
 								},
 								"BackLightCtrl":	{
-									"Enable":	0,
+									"Enable":	1,
 									"StrBias":	0,
 									"MeasArea":	"AECV2_MEASURE_AREA_AUTO",
 									"OEROILowTh":	150,
