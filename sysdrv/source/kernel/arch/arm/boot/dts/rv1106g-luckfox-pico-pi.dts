@@ -13,6 +13,11 @@
 	model = "Luckfox Pico Pi";
 	compatible = "rockchip,rv1103g-38x38-ipc-v10", "rockchip,rv1106g3";
 
+	/* UART2 is reserved for the ESP32, not the kernel debug console. */
+	chosen {
+		bootargs = "root=/dev/mmcblk0p7 rootwait snd_soc_core.prealloc_buffer_size_kbytes=16 coherent_pool=0";
+	};
+
 	restart-poweroff {
 		compatible = "restart-poweroff";
 	};
@@ -71,9 +76,22 @@
 	status = "okay";
 };
 
+/* FIQ debugger and earlycon would contend with UART2 (/dev/ttyS2). */
 &fiq_debugger {
-	rockchip,irq-mode-enable = <1>;
+	status = "disabled";
+};
+
+/* The ESP32 uses the native UART2 M1 pins on the Pico Pi. */
+&uart2 {
 	status = "okay";
+};
+
+&uart2m1_xfer {
+	rockchip,pins =
+		/* RX: GPIO1_B3; keep its existing pull-up/drive setting. */
+		<1 RK_PB3 2 &pcfg_pull_up>,
+		/* TX: GPIO1_B2; level 1 (4 mA), encoded as 0x03. */
+		<1 RK_PB2 2 &pcfg_pull_up_drv_level_1>;
 };
 
 /**********SDIO-WIFI**********/
