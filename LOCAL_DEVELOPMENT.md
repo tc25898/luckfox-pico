@@ -121,3 +121,22 @@ CMake modernization, generated Wi-Fi outputs, and validation notes together.
 Future changes use task branches and focused PRs against this fork's `main`.
 Contributions to LuckfoxTECH remain separate decisions. The application
 source and project tracking live in the private `backyard-defense` repository.
+
+## Wi-Fi build profile (Pico Pi)
+
+`LF_NETWORK_PROFILE=portal|luckfox` selects firmware networking at **build time**.
+An unset profile defaults to `luckfox`. Use `LF_NETWORK_PROFILE=portal ./build.sh`
+to build the phone setup image.
+
+- `portal`: generate an empty WPA config, compile vendor WLAN control with
+  `dhcpcd`, and install the Portal-specific init override. Deploy the matching
+  Backyard Defense application for the phone setup portal.
+- `luckfox`: generate the preset SSID/PSK and keep the original `udhcpc`
+  control and vendor init scripts.
+
+Do not assume /etc or old /data profiles migrate across these two image
+policies. The Wi-Fi object is rebuilt when switching profiles; rebuild the
+rootfs when switching back to portal so the dhcpcd init service is present.
+The portal image removes the stock OEM Ethernet udhcpc launch before platform
+preparation. Use USB/ADB recovery and verify DHCP ownership on both interfaces.
+Full firmware boot/AP/rollback tests remain required.

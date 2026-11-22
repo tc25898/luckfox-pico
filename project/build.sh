@@ -620,10 +620,20 @@ function build_check() {
 
 function build_app() {
 	if [ "$RK_ENABLE_WIFI" = "y" ]; then
-		echo "Set Wifi SSID and PASSWD"
-		check_config LF_WIFI_PSK LF_WIFI_SSID || return 0
-		touch $WIFI_NEW_CONF
-		cat >$WIFI_NEW_CONF <<EOF
+		case "${LF_NETWORK_PROFILE:-luckfox}" in
+		portal)
+			# First-boot networking is provisioned by the application, not a preset SSID.
+			cat >"$WIFI_NEW_CONF" <<EOF
+ctrl_interface=/var/run/wpa_supplicant
+ap_scan=1
+update_config=1
+EOF
+			mv "$WIFI_NEW_CONF" "$WIFI_CONF"
+			;;
+		luckfox)
+			echo "Set Wifi SSID and PASSWD"
+			check_config LF_WIFI_PSK LF_WIFI_SSID || return 0
+			cat >"$WIFI_NEW_CONF" <<EOF
 ctrl_interface=/var/run/wpa_supplicant
 ap_scan=1
 update_config=1
@@ -634,7 +644,13 @@ network={
 	key_mgmt=WPA-PSK
 }
 EOF
-		mv $WIFI_NEW_CONF $WIFI_CONF
+			mv "$WIFI_NEW_CONF" "$WIFI_CONF"
+			;;
+		*)
+			echo "Unknown LF_NETWORK_PROFILE: $LF_NETWORK_PROFILE" >&2
+			return 1
+			;;
+		esac
 	fi
 
 	check_config RK_APP_TYPE || return 0
@@ -2509,6 +2525,17 @@ function post_overlay() {
 				$tmp_path/overlay/$overlay_dir/* $RK_PROJECT_PACKAGE_ROOTFS_DIR/
 		fi
 	done
+
+	# A preset-network image uses the vendor's udhcpc, not the Buildroot dhcpcd daemon.
+	if [ "${LF_NETWORK_PROFILE:-}" = luckfox ]; then
+		rm -f "$RK_PROJECT_PACKAGE_ROOTFS_DIR/etc/init.d/S41dhcpcd" \
+			"$RK_PROJECT_PACKAGE_ROOTFS_DIR/etc/backyard-network-profile"
+	elif [ "${LF_NETWORK_PROFILE:-}" = portal ]; then
+		[ -x "$RK_PROJECT_PACKAGE_ROOTFS_DIR/etc/init.d/S41dhcpcd" ] || {
+			echo "Portal firmware needs S41dhcpcd; rebuild the rootfs before switching profiles" >&2
+			return 1
+		}
+	fi
 }
 
 function __RUN_PRE_BUILD_OEM_SCRIPT() {
@@ -2554,6 +2581,15 @@ function build_firmware() {
 	__BUILD_ENABLE_COREDUMP_SCRIPT
 
 	__RUN_PRE_BUILD_OEM_SCRIPT
+
+	if [ "${LF_NETWORK_PROFILE:-}" = portal ]; then
+		local launch="$RK_PROJECT_PACKAGE_OEM_DIR/usr/bin/RkLunch.sh"
+		grep -Fxq '	ifconfig eth0 up && udhcpc -i eth0 >/dev/null 2>&1' "$launch" || {
+			echo "Unexpected OEM network startup: $launch" >&2
+			return 1
+		}
+		sed -i 's@^\(\s*ifconfig eth0 up\) \&\& udhcpc -i eth0 >/dev/null 2>\&1$@\1@' "$launch"
+	fi
 
 	if [ "$RK_BUILD_APP_TO_OEM_PARTITION" = "y" ]; then
 		rm -rf $RK_PROJECT_PACKAGE_ROOTFS_DIR/oem/*

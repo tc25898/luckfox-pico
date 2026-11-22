@@ -928,7 +928,6 @@ int wpa_wifi_enable(int enable)
 			//exec_command_system("ifconfig wlan0 down");
 			exec_command_system("ifconfig wlan0 up");
 			exec_command_system("ifconfig wlan0 0.0.0.0");
-			//exec_command_system("killall udhcpc");
 			if (get_ps_pid("wpa_supplicant") > 0) {
 				exec_command_system("killall -15 wpa_supplicant");
 				usleep(600000);
@@ -941,14 +940,14 @@ int wpa_wifi_enable(int enable)
 
 			//check wpa conf
 			if (access("/data/cfg/wpa_supplicant.conf", F_OK) == 0) {
-				exec_command_system("wpa_supplicant -B -i wlan0 -c /data/cfg/wpa_supplicant.conf -d");
+				exec_command_system("umask 077; chmod 600 /data/cfg/wpa_supplicant.conf && wpa_supplicant -B -i wlan0 -c /data/cfg/wpa_supplicant.conf -d");
 			} else {
 				if (access("/etc/wpa_supplicant.conf", F_OK) == 0) {
 					//check /data write?
-					if (exec_command_system("cp /etc/wpa_supplicant.conf /data/wpa_supplicant.conf") == 0)
-						exec_command_system("wpa_supplicant -B -i wlan0 -c /data/wpa_supplicant.conf -d");
+					if (exec_command_system("umask 077; cp /etc/wpa_supplicant.conf /data/wpa_supplicant.conf && chmod 600 /data/wpa_supplicant.conf") == 0)
+						exec_command_system("umask 077; wpa_supplicant -B -i wlan0 -c /data/wpa_supplicant.conf -d");
 					else
-						exec_command_system("wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant.conf -d");
+						exec_command_system("umask 077; wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant.conf -d");
 				} else {
 					pr_info("Don't found wpa_supplicant.conf so RK_wifi_enable failed!\n");
 					gstate = RK_WIFI_State_OFF;
@@ -958,8 +957,11 @@ int wpa_wifi_enable(int enable)
 			}
 
 			usleep(500000);
+#ifdef LF_NETWORK_PORTAL
+			exec_command_system("dhcpcd -n wlan0");
+#else
 			exec_command_system("udhcpc -i wlan0 -T 1 -A 0 -b -q &");
-			//exec_command_system("dhcpcd wlan0 -AL -t 0 &");
+#endif
 
 			gstate = RK_WIFI_State_OPEN;
 			wifi_state_send(gstate, NULL);
@@ -994,8 +996,6 @@ int wpa_wifi_enable(int enable)
 			usleep(300000);
 			exec_command_system("killall -15 wpa_supplicant");
 			usleep(300000);
-			//exec_command_system("killall dhcpcd");
-			//exec_command_system("killall udhcpc");
 			usleep(200000);
 			if (start_wifi_monitor_threadId > 0) {
 				//pthread_cancel(start_wifi_monitor_threadId);
@@ -1464,6 +1464,11 @@ static void rkwifi_check_ip(void)
 			}
 		}
 
+#ifdef LF_NETWORK_PORTAL
+		if (i == 14) {
+			exec_command_system("dhcpcd -n wlan0");
+		}
+#else
 		if (i > 13) {
 			exec_command_system("killall udhcpc");
 			usleep(300000);
@@ -1475,6 +1480,7 @@ static void rkwifi_check_ip(void)
 			exec_command_system("dhcpcd wlan0 -AL -t 0 &");
 			*/
 		}
+#endif
 	}
 
 	pr_info("rkwifi_check_ip exit.\n");
@@ -1500,6 +1506,12 @@ static bool check_wifi_isconnected(void) {
 				pr_info("wifi is connected.\n");
 				break;
 			} else {
+#ifdef LF_NETWORK_PORTAL
+				if ((!(i%30)) || flag) {
+					flag = 0;
+					exec_command_system("dhcpcd -n wlan0");
+				}
+#else
 				if ((!(i%30)) || flag) {
 					flag = 0;
 					exec_command_system("killall udhcpc");
@@ -1512,6 +1524,7 @@ static bool check_wifi_isconnected(void) {
 					exec_command_system("dhcpcd wlan0 -AL -t 0 &");
 					*/
 				}
+#endif
 			}
 		} else if (i == 20) {
 			pr_info("check_wifi_isconnected is still not COMPLETED! break \n");
@@ -2150,7 +2163,6 @@ static char primary_iface[PROPERTY_VALUE_MAX] = "wlan0";
 #define DNSMASQ "dnsmasq"
 #define SIMPLE_CONFIG "simple_config"
 #define SMART_CONFIG "smart_config"
-#define UDHCPC "udhcpc"
 
 static void wifi_close_sockets()
 {

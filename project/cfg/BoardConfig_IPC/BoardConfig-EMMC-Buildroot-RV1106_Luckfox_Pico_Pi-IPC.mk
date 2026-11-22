@@ -127,3 +127,9 @@ export RK_PRE_BUILD_USERDATA_SCRIPT=luckfox-userdata-pre.sh
 # declare overlay directory
 export RK_POST_OVERLAY="overlay-luckfox-config overlay-luckfox-buildroot-init overlay-luckfox-buildroot-shadow\
 			overlay-luckfox-ppp overlay-luckfox-buildroot-sim7600g"
+
+# Select the portal explicitly; an unset profile keeps Luckfox networking.
+export LF_NETWORK_PROFILE="${LF_NETWORK_PROFILE:-luckfox}"
+if [ "$LF_NETWORK_PROFILE" = portal ]; then
+	export RK_POST_OVERLAY="$RK_POST_OVERLAY overlay-backyard-portal"
+fi

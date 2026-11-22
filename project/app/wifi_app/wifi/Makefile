@@ -1,4 +1,8 @@
 CFLAGS := -Wall -g
+# Select DHCP handling at compile time, not via a runtime flag.
+ifeq ($(LF_NETWORK_PROFILE),portal)
+CFLAGS += -DLF_NETWORK_PORTAL
+endif
 CC := $(RK_APP_CROSS)-gcc
 
 all: librkwifibt rkwifi_server
@@ -74,3 +78,8 @@ rkwifi_server: librkwifibt
 
 clean:
 	rm -f $(OBJS) test/rkwifi_server test/*.o src/hisi_tools/vlinktest/*.o src/hisi_tools/securec/*.o
+
+# Profile changes alter compiler flags; always rebuild this one source file.
+.PHONY: FORCE
+src/Rk_wifi.o: FORCE
+FORCE:
