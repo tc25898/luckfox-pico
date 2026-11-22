@@ -2525,6 +2525,11 @@ function post_overlay() {
 				$tmp_path/overlay/$overlay_dir/* $RK_PROJECT_PACKAGE_ROOTFS_DIR/
 		fi
 	done
+
+	# A preset-network image uses the vendor's udhcpc, not the Buildroot dhcpcd daemon.
+	if [ "${LF_NETWORK_PROFILE:-}" = luckfox ]; then
+		rm -f "$RK_PROJECT_PACKAGE_ROOTFS_DIR/etc/init.d/S41dhcpcd"
+	fi
 }
 
 function __RUN_PRE_BUILD_OEM_SCRIPT() {
