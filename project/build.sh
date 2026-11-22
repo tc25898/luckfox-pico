@@ -2528,7 +2528,13 @@ function post_overlay() {
 
 	# A preset-network image uses the vendor's udhcpc, not the Buildroot dhcpcd daemon.
 	if [ "${LF_NETWORK_PROFILE:-}" = luckfox ]; then
-		rm -f "$RK_PROJECT_PACKAGE_ROOTFS_DIR/etc/init.d/S41dhcpcd"
+		rm -f "$RK_PROJECT_PACKAGE_ROOTFS_DIR/etc/init.d/S41dhcpcd" \
+			"$RK_PROJECT_PACKAGE_ROOTFS_DIR/etc/backyard-network-profile"
+	elif [ "${LF_NETWORK_PROFILE:-}" = portal ]; then
+		[ -x "$RK_PROJECT_PACKAGE_ROOTFS_DIR/etc/init.d/S41dhcpcd" ] || {
+			echo "Portal firmware needs S41dhcpcd; rebuild the rootfs before switching profiles" >&2
+			return 1
+		}
 	fi
 }
 
@@ -2575,6 +2581,15 @@ function build_firmware() {
 	__BUILD_ENABLE_COREDUMP_SCRIPT
 
 	__RUN_PRE_BUILD_OEM_SCRIPT
+
+	if [ "${LF_NETWORK_PROFILE:-}" = portal ]; then
+		local launch="$RK_PROJECT_PACKAGE_OEM_DIR/usr/bin/RkLunch.sh"
+		grep -Fxq '	ifconfig eth0 up && udhcpc -i eth0 >/dev/null 2>&1' "$launch" || {
+			echo "Unexpected OEM network startup: $launch" >&2
+			return 1
+		}
+		sed -i 's@^\(\s*ifconfig eth0 up\) \&\& udhcpc -i eth0 >/dev/null 2>\&1$@\1@' "$launch"
+	fi
 
 	if [ "$RK_BUILD_APP_TO_OEM_PARTITION" = "y" ]; then
 		rm -rf $RK_PROJECT_PACKAGE_ROOTFS_DIR/oem/*

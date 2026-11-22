@@ -78,3 +78,8 @@ rkwifi_server: librkwifibt
 
 clean:
 	rm -f $(OBJS) test/rkwifi_server test/*.o src/hisi_tools/vlinktest/*.o src/hisi_tools/securec/*.o
+
+# Profile changes alter compiler flags; always rebuild this one source file.
+.PHONY: FORCE
+src/Rk_wifi.o: FORCE
+FORCE:

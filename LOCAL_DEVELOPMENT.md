@@ -135,7 +135,8 @@ for the original SDK behavior); other boards default to `luckfox`.
   control and vendor init scripts.
 
 Do not assume /etc or old /data profiles migrate across these two image
-policies. Rebuild Wi-Fi objects clean when switching profiles. The Portal
-application's platform preparation replaces the separate OEM `RkLunch.sh`
-startup; use USB/ADB recovery and verify Ethernet DHCP ownership before and
-after platform preparation. Full firmware boot/AP/rollback tests remain required.
+policies. The Wi-Fi object is rebuilt when switching profiles; rebuild the
+rootfs when switching back to portal so the dhcpcd init service is present.
+The portal image removes the stock OEM Ethernet udhcpc launch before platform
+preparation. Use USB/ADB recovery and verify DHCP ownership on both interfaces.
+Full firmware boot/AP/rollback tests remain required.
