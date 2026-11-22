@@ -125,8 +125,8 @@ source and project tracking live in the private `backyard-defense` repository.
 ## Wi-Fi build profile (Pico Pi)
 
 `LF_NETWORK_PROFILE=portal|luckfox` selects firmware networking at **build time**.
-Pico Pi defaults to `portal` (use `LF_NETWORK_PROFILE=luckfox ./build.sh`
-for the original SDK behavior); other boards default to `luckfox`.
+An unset profile defaults to `luckfox`. Use `LF_NETWORK_PROFILE=portal ./build.sh`
+to build the phone setup image.
 
 - `portal`: generate an empty WPA config, compile vendor WLAN control with
   `dhcpcd`, and install the Portal-specific init override. Deploy the matching
