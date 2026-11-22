@@ -620,10 +620,20 @@ function build_check() {
 
 function build_app() {
 	if [ "$RK_ENABLE_WIFI" = "y" ]; then
-		echo "Set Wifi SSID and PASSWD"
-		check_config LF_WIFI_PSK LF_WIFI_SSID || return 0
-		touch $WIFI_NEW_CONF
-		cat >$WIFI_NEW_CONF <<EOF
+		case "${LF_NETWORK_PROFILE:-luckfox}" in
+		portal)
+			# First-boot networking is provisioned by the application, not a preset SSID.
+			cat >"$WIFI_NEW_CONF" <<EOF
+ctrl_interface=/var/run/wpa_supplicant
+ap_scan=1
+update_config=1
+EOF
+			mv "$WIFI_NEW_CONF" "$WIFI_CONF"
+			;;
+		luckfox)
+			echo "Set Wifi SSID and PASSWD"
+			check_config LF_WIFI_PSK LF_WIFI_SSID || return 0
+			cat >"$WIFI_NEW_CONF" <<EOF
 ctrl_interface=/var/run/wpa_supplicant
 ap_scan=1
 update_config=1
@@ -634,7 +644,13 @@ network={
 	key_mgmt=WPA-PSK
 }
 EOF
-		mv $WIFI_NEW_CONF $WIFI_CONF
+			mv "$WIFI_NEW_CONF" "$WIFI_CONF"
+			;;
+		*)
+			echo "Unknown LF_NETWORK_PROFILE: $LF_NETWORK_PROFILE" >&2
+			return 1
+			;;
+		esac
 	fi
 
 	check_config RK_APP_TYPE || return 0

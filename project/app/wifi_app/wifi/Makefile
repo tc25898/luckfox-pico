@@ -1,4 +1,8 @@
 CFLAGS := -Wall -g
+# Select DHCP handling at compile time, not via a runtime flag.
+ifeq ($(LF_NETWORK_PROFILE),portal)
+CFLAGS += -DLF_NETWORK_PORTAL
+endif
 CC := $(RK_APP_CROSS)-gcc
 
 all: librkwifibt rkwifi_server

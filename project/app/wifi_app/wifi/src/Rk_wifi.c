@@ -957,7 +957,11 @@ int wpa_wifi_enable(int enable)
 			}
 
 			usleep(500000);
+#ifdef LF_NETWORK_PORTAL
 			exec_command_system("dhcpcd -n wlan0");
+#else
+			exec_command_system("udhcpc -i wlan0 -T 1 -A 0 -b -q &");
+#endif
 
 			gstate = RK_WIFI_State_OPEN;
 			wifi_state_send(gstate, NULL);
@@ -1460,9 +1464,23 @@ static void rkwifi_check_ip(void)
 			}
 		}
 
+#ifdef LF_NETWORK_PORTAL
 		if (i == 14) {
 			exec_command_system("dhcpcd -n wlan0");
 		}
+#else
+		if (i > 13) {
+			exec_command_system("killall udhcpc");
+			usleep(300000);
+			exec_command_system("udhcpc -i eth0 -T 1 -A 0 -b -q &");
+			exec_command_system("udhcpc -i wlan0 -T 1 -A 0 -b -q &");
+			/*
+			exec_command_system("killall dhcpcd");
+			usleep(100000);
+			exec_command_system("dhcpcd wlan0 -AL -t 0 &");
+			*/
+		}
+#endif
 	}
 
 	pr_info("rkwifi_check_ip exit.\n");
@@ -1488,10 +1506,25 @@ static bool check_wifi_isconnected(void) {
 				pr_info("wifi is connected.\n");
 				break;
 			} else {
+#ifdef LF_NETWORK_PORTAL
 				if ((!(i%30)) || flag) {
 					flag = 0;
 					exec_command_system("dhcpcd -n wlan0");
 				}
+#else
+				if ((!(i%30)) || flag) {
+					flag = 0;
+					exec_command_system("killall udhcpc");
+					usleep(300000);
+					exec_command_system("udhcpc -i eth0 -T 1 -A 0 -b -q &");
+					exec_command_system("udhcpc -i wlan0 -T 1 -A 0 -b -q &");
+					/*
+					exec_command_system("killall dhcpcd");
+					usleep(300000);
+					exec_command_system("dhcpcd wlan0 -AL -t 0 &");
+					*/
+				}
+#endif
 			}
 		} else if (i == 20) {
 			pr_info("check_wifi_isconnected is still not COMPLETED! break \n");

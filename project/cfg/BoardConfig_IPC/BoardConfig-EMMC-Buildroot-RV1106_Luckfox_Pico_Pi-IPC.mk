@@ -127,3 +127,9 @@ export RK_PRE_BUILD_USERDATA_SCRIPT=luckfox-userdata-pre.sh
 # declare overlay directory
 export RK_POST_OVERLAY="overlay-luckfox-config overlay-luckfox-buildroot-init overlay-luckfox-buildroot-shadow\
 			overlay-luckfox-ppp overlay-luckfox-buildroot-sim7600g"
+
+# Pico Pi defaults to the portal firmware; override with LF_NETWORK_PROFILE=luckfox.
+export LF_NETWORK_PROFILE="${LF_NETWORK_PROFILE:-portal}"
+if [ "$LF_NETWORK_PROFILE" = portal ]; then
+	export RK_POST_OVERLAY="$RK_POST_OVERLAY overlay-backyard-portal"
+fi

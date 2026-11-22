@@ -41,7 +41,7 @@ network_init() {
 	else
 		echo $ethaddr1 >/data/ethaddr.txt
 	fi
-	ifconfig eth0 up
+	ifconfig eth0 up && udhcpc -i eth0 >/dev/null 2>&1
 }
 
 post_chk() {
