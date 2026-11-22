@@ -928,7 +928,6 @@ int wpa_wifi_enable(int enable)
 			//exec_command_system("ifconfig wlan0 down");
 			exec_command_system("ifconfig wlan0 up");
 			exec_command_system("ifconfig wlan0 0.0.0.0");
-			//exec_command_system("killall udhcpc");
 			if (get_ps_pid("wpa_supplicant") > 0) {
 				exec_command_system("killall -15 wpa_supplicant");
 				usleep(600000);
@@ -958,8 +957,7 @@ int wpa_wifi_enable(int enable)
 			}
 
 			usleep(500000);
-			exec_command_system("udhcpc -i wlan0 -T 1 -A 0 -b -q &");
-			//exec_command_system("dhcpcd wlan0 -AL -t 0 &");
+			exec_command_system("dhcpcd -n wlan0");
 
 			gstate = RK_WIFI_State_OPEN;
 			wifi_state_send(gstate, NULL);
@@ -994,8 +992,6 @@ int wpa_wifi_enable(int enable)
 			usleep(300000);
 			exec_command_system("killall -15 wpa_supplicant");
 			usleep(300000);
-			//exec_command_system("killall dhcpcd");
-			//exec_command_system("killall udhcpc");
 			usleep(200000);
 			if (start_wifi_monitor_threadId > 0) {
 				//pthread_cancel(start_wifi_monitor_threadId);
@@ -1464,16 +1460,8 @@ static void rkwifi_check_ip(void)
 			}
 		}
 
-		if (i > 13) {
-			exec_command_system("killall udhcpc");
-			usleep(300000);
-			exec_command_system("udhcpc -i eth0 -T 1 -A 0 -b -q &");
-			exec_command_system("udhcpc -i wlan0 -T 1 -A 0 -b -q &");
-			/*
-			exec_command_system("killall dhcpcd");
-			usleep(100000);
-			exec_command_system("dhcpcd wlan0 -AL -t 0 &");
-			*/
+		if (i == 14) {
+			exec_command_system("dhcpcd -n wlan0");
 		}
 	}
 
@@ -1502,15 +1490,7 @@ static bool check_wifi_isconnected(void) {
 			} else {
 				if ((!(i%30)) || flag) {
 					flag = 0;
-					exec_command_system("killall udhcpc");
-					usleep(300000);
-					exec_command_system("udhcpc -i eth0 -T 1 -A 0 -b -q &");
-					exec_command_system("udhcpc -i wlan0 -T 1 -A 0 -b -q &");
-					/*
-					exec_command_system("killall dhcpcd");
-					usleep(300000);
-					exec_command_system("dhcpcd wlan0 -AL -t 0 &");
-					*/
+					exec_command_system("dhcpcd -n wlan0");
 				}
 			}
 		} else if (i == 20) {
@@ -2150,7 +2130,6 @@ static char primary_iface[PROPERTY_VALUE_MAX] = "wlan0";
 #define DNSMASQ "dnsmasq"
 #define SIMPLE_CONFIG "simple_config"
 #define SMART_CONFIG "smart_config"
-#define UDHCPC "udhcpc"
 
 static void wifi_close_sockets()
 {
