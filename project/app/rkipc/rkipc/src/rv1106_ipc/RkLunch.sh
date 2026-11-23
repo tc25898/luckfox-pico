@@ -41,7 +41,11 @@ network_init() {
 	else
 		echo $ethaddr1 >/data/ethaddr.txt
 	fi
-	ifconfig eth0 up && udhcpc -i eth0 >/dev/null 2>&1
+	if grep -qx portal /etc/backyard-network-profile 2>/dev/null; then
+		ifconfig eth0 up
+	else
+		ifconfig eth0 up && udhcpc -i eth0 >/dev/null 2>&1
+	fi
 }
 
 post_chk() {
@@ -61,8 +65,12 @@ post_chk() {
 		default_ko_dir=/oem/usr/ko
 	fi
 	if [ -f "$default_ko_dir/insmod_ko.sh" ]; then
-		cd $default_ko_dir && sh insmod_ko.sh && cd -
+		(cd "$default_ko_dir" && sh insmod_ko.sh) || return 1
 	fi
+	# Required preparation is synchronous; never start a camera application here.
+	for module in video_rkisp rga3 rknpu rockit; do
+		[ -d "/sys/module/$module" ] || { echo "Missing required module: $module" >&2; return 1; }
+	done
 
 	network_init &
 	check_linker /userdata /oem/usr/www/userdata
@@ -148,11 +156,8 @@ post_chk() {
 		fi
 	fi
 
-	if [ -d "/oem/usr/share/iqfiles" ]; then
-		rkipc -a /oem/usr/share/iqfiles &
-	else
-		rkipc &
-	fi
+	# Controller owns normal camera operation. rkipc remains available for
+	# explicit maintenance only, after Controller has been stopped.
 }
 
 rcS
@@ -163,4 +168,4 @@ echo "/data/core-%p-%e" >/proc/sys/kernel/core_pattern
 
 echo 1 >/proc/sys/vm/overcommit_memory
 
-post_chk &
+post_chk
