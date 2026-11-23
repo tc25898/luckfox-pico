@@ -1,5 +1,10 @@
 ![luckfox](https://github.com/LuckfoxTECH/luckfox-pico/assets/144299491/cec5c4a5-22b9-4a9a-abb1-704b11651e88)
 # Luckfox Pico SDK
+
+This fork prepares camera drivers synchronously for Backyard Defense, leaves
+stock rkipc stopped, and selects Ethernet DHCP behavior from the network
+profile. See [local development](LOCAL_DEVELOPMENT.md) for the firmware
+profiles and board-specific workflow.
 [中文版](./README_CN.md)
 * This SDK is modified based on the SDK provided by Rockchip
 * It provides a customized SDK specifically for Luckfox Pico series development boards 

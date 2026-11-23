@@ -137,6 +137,6 @@ to build the phone setup image.
 Do not assume /etc or old /data profiles migrate across these two image
 policies. The Wi-Fi object is rebuilt when switching profiles; rebuild the
 rootfs when switching back to portal so the dhcpcd init service is present.
-The portal image removes the stock OEM Ethernet udhcpc launch before platform
-preparation. Use USB/ADB recovery and verify DHCP ownership on both interfaces.
+The OEM boot script selects Ethernet DHCP behavior from the installed network
+profile. Use USB/ADB recovery and verify DHCP ownership on both interfaces.
 Full firmware boot/AP/rollback tests remain required.

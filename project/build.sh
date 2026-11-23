@@ -2582,15 +2582,6 @@ function build_firmware() {
 
 	__RUN_PRE_BUILD_OEM_SCRIPT
 
-	if [ "${LF_NETWORK_PROFILE:-}" = portal ]; then
-		local launch="$RK_PROJECT_PACKAGE_OEM_DIR/usr/bin/RkLunch.sh"
-		grep -Fxq '	ifconfig eth0 up && udhcpc -i eth0 >/dev/null 2>&1' "$launch" || {
-			echo "Unexpected OEM network startup: $launch" >&2
-			return 1
-		}
-		sed -i 's@^\(\s*ifconfig eth0 up\) \&\& udhcpc -i eth0 >/dev/null 2>\&1$@\1@' "$launch"
-	fi
-
 	if [ "$RK_BUILD_APP_TO_OEM_PARTITION" = "y" ]; then
 		rm -rf $RK_PROJECT_PACKAGE_ROOTFS_DIR/oem/*
 		mkdir -p $RK_PROJECT_PACKAGE_ROOTFS_DIR/oem
